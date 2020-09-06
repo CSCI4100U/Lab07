@@ -1,79 +1,19 @@
-# Lab 05/06
-The starter code for lab 05-06.
+# Lab 07
+The starter code for lab 07.
 
 ## Overview
-Let's develop a simple grade entry system (UI and back-end) in Flutter.
+For this lab, you will modify the previous lab to use Firestore Cloud as its data source.  The result will be that it could share the data between clients (if using the same account), and changes made by one client will be automatically visible to other clients.
 
-_**Note:** This lab is designed to take 2 weeks, and will be worth the value of two lab assignments.  It is recommended that you do the overall user interface in the first week, and have placeholder data handlers (e.g. that just print to the console).  You can implement these functions in the second week._
- 
 ## Instructions
-### User Interface
-Our user interface will be relatively simple.  We'll have two pages.  The first page, `ListGrades`, will show a list of all available grades.  The second page, `GradeForm`, will allow entry of grade data.  Below are two screenshots of the resulting UI:
+The previous lab had you develop a model which uses SQLite, such that it was kept separated from the user interface.  This will make it somewhat easier for us to migrate to a cloud database.  
 
-![the list grades page](images/list_grades.png)
- 
-_Figure 1 - The `ListGrades` page_
+### Changes to the Model
+The `Grade` class should remain mostly the same, but you will need to add a `DocumentReference` instance variable to it (called `reference`), and change the type of `id` to be `String` (since we will now be using the auto-generated-by-FireStore `DocumentID` as our `id`, which can be accessed via our new reference field).
 
-![the grade form page](images/grade_form.png)
+The `GradesModel` class needs to be heavily modified, since nearly all of the functionality will be different.  Most of the data functions with Firestore Cloud are very simple, often one line of code, so this class will get reduced in size significantly.  Now that `Grade` has a `DocumentReference` instance variable, making updates to the data store should be easy.
 
-_Figure 2 - The `GradeForm` page_
-
-First, you will need to create a Grade class that will store the following information:
-- `sid` - A `String` containing the 9-digit student ID
-- `grade` - A `String` containing the letter grade for that student
-
-#### ListGrades
-The `ListGrades` page will use a `ListView` to show all grades entered into the system.  For now, you can use a list of placeholder data, but be sure to enter enough grades to test scrolling.  The `ListView` elements will be `ListTile` widgets.  The `title` of the `ListTile` will be the `sid`, and the `subtitle` will be the `grade`.  The `ListGrades` page will also show two actions on the app bar:
-
-- `Edit` (using the icon `Icons.edit`) - calls the method `_editGrade()`
-- `Delete` (using the icon `Icons.delete`) - calls the method `_deleteGrade()`
-
-The `ListGrades` page will also show a floating action button (using the icon `Icons.add`), which will call the method `_addGrade()`.
-
-For now, both the `_addGrade()` method and the `_editGrade()` method will merely show the `GradeForm` page, and print a message to the console to help you ensure that they execute.
-
-In order to edit or delete a grade, we'll need the ability to select one.  We'll do this by adding a variable `_selectedIndex`, which will get set when the list item is tapped.  This can easily be done by wrapping the `ListTile` in a `GestureDetector`, and implementing the `onTap` handler.  For the `ListTile` that is selected, show it with a blue background.  You can do this by wrapping the `ListTile` in a `Container`, and giving it a `BoxDecoration` as its decoration.  `BoxDecoration` has a `color` attribute.   The selected grade will not impact the add grade functionality.
-
-#### GradeForm
-The `GradeForm` page will show a form, consisting of two text fields (one for `sid`, and one for `grade`), and a floating action button (`Save`, with icon `Icons.save`).
-
-### Implementing Persistence using SQLite
-Our job for this part will be to:
-
-- [ ] populate the `ListGrades` page with data from the database, and
-- [ ] implement the `_addGrade()` method and the `_editGrade()` method.  
-
-The actual logic will go into a separate class, `GradesModel`.  You can use the _SQFlite_ demo code as a starting point, if it makes it easier.
-
-You will need to add an id field, as well as the following functions in the `Grade` class:
-- `toMap()`
-    - Returns a map of all three fields of the `Grade` class (`id`, `sid`, and `grade`)
-- `fromMap()`
-    - Generates a new `Grade` instance using a map containing all three fields of the `Grade` class (`id`, `sid`, and `grade`)
-
-You will need to implement the following functions in the `GradesModel` class:
-- `getAllGrades()`
-    - Returns a list of all grades in the database
-- `insertGrade(Grade grade)`
-    - Adds a new grade to the database, using the data included in `grade`
-    - Returns the newly generated id
-- `updateGrade(Grade grade)`
-    - Updates the grade in the database with `id` equal to that of `grade`, using the new data included in grade
-- `deleteGradeById(int id)`
-    - Deletes the grade in the database with the provided `id`
-
-Using the `getAllGrades()` function in `GradesModel`, provide real data to the `ListGrades` page.
-
-Now, we can implement the stubbed functions:
-- `_addGrade()`
-    - Show the `GradeForm` page, and use the returned `Grade` object (if not `null`) to call `insertGrade` in the `GradesModel`
-- `_editGrade()`
-    - Show the `GradeForm` page, and use the returned `Grade` object (if not `null`) to call `updateGrade` in the `GradesModel`
-- `_deleteGrade()`
-    - For the selected `Grade`, use its `id` to call `deleteGradeById` in the `GradesModel`
-
-### Need Extra Challenge?
-Add the ability to delete grades using the swiping gesture.  Add the ability to edit grades using the long press gesture, with a popup menu if able.
+### Changes to the User Interface
+While it is normally desirable to make minimal changes to the user interface, in this case we need to since we want to support live updates when data is modified in our cloud store.  We'll accomplish this task by using a `StreamBuilder`.  `StreamBuilder` is a class which expects a stream of data, and re-builds the UI when the data has changed.  We've used this class in the in-class demo.  This `StreamBuilder` will now be used to build the `ListView` created in the previous lab.  The `GradesModel` methods can be used as the data source for this `StreamBuilder`, as well as the mechanisms for creating, updating, and deleting Grades from the data store.
 
 ## Getting Help
 If you run into difficulty, you may wish to check out some of the following resources:
